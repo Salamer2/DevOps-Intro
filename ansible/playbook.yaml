@@ -86,6 +86,14 @@
         update_cache: true
         cache_valid_time: 3600
 
+    - name: Make /etc/ansible
+      ansible.builtin.file:
+        path: /etc/ansible
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Ship the local inventory for ansible-pull
       ansible.builtin.copy:
         src: files/inventory-local.ini
