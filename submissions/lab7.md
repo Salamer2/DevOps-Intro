@@ -66,7 +66,7 @@ Handler fires if at least one task with ```notify: restart quicknotes``` returne
 #### c) Variable hierarchy: Ansible has at least 22 levels of variable precedence. List the top 3 places you'd put a variable for this lab (defaults, group_vars, playbook vars, …) and why.
 First of all, I chosen one place for this lab - inside ```playbook.yaml``` in ```vars:``` block. It is simple and readable, for this lab that's perfect because I have only one playbook. If I had several hosts that require the same variables - I would use group_vars. In the end, I would use defaults to set up basic variables. They have much smaller priority and will be overridden by group_vars and playbook vars. However, basic variables are good just to make sure, that unspecified variables will be relatively adequate.
 #### d) gather_facts: true is the default. Do you need it for this playbook? What does turning it off save you per run?
-No, i don't need it. Nothing in this play uses system info. Disabling it saves a little CPU time during each run. 
+No, i don't need it. Nothing in this play uses system info. Disabling it saves a little CPU time during each run and saves extra SSH use. On scale it can save minutes though. But in my case it's probably near second  
 
 ## Task 2
 
@@ -171,3 +171,102 @@ That's a completely wrong thing to do, because it destroys the whole idea of a t
 
 #### g) ansible-playbook --check is dry-run. --diff shows changes. What's the bug you'd catch by running --check --diff before a production deploy that you'd miss with plain --check?
 The main problem is that ```--check``` doesn't tell whether the change is correct or not, it will just say that there was some change. With ```--diff``` you will be able to spot syntax errors or typos, by seeing what exactly has changed.
+
+## Bonus task
+
+### Artifacts
+
+- [ansible/templates/ansible-pull.service.j2](../ansible/templates/ansible-pull.service.j2)
+- [ansible/templates/ansible-pull.timer.j2](../ansible/templates/ansible-pull.timer.j2)
+- [ansible/files/inventory-local.ini](../ansible/files/inventory-local.ini)
+
+### Timers check
+```powershell
+thebruh@thebruh-PC:/mnt/c/Users/thebruh/Desktop/DevOpsCourse/DevOps-Intro$ vagrant.exe ssh -c "systemctl list-timers | grep ansible-pull"
+-                                  - Sun 2026-09-27 02:25:32 UTC      41s ago ansible-pull.timer             ansible-pull.service
+thebruh@thebruh-PC:/mnt/c/Users/thebruh/Desktop/DevOpsCourse/DevOps-Intro$ vagrant.exe ssh -c "systemctl is-active ansible-pull.timer && systemctl is-enabled ansible-pull.timer"
+active
+enabled
+```
+
+### Successful pull run
+I changed restart_sec from 4 to 3
+```
+$ git add ansible/playbook.yaml
+$ git commit -s -S -m "(lab7) changed restart_sec from 4 to 3"
+$ git push
+```
+
+```
+date -u
+Sun Sep 27 02:37:54 UTC 2026
+```
+
+```powershell
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: [WARNING]: Could not match supplied host pattern, ignoring: quicknotes-vm
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: localhost | CHANGED => {
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]:     "after": "a12f9caf542f28480be102b5e6a1641fea440863",
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]:     "before": "e95a912b20bfb22f70eb652fcdac665b35d53404",
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]:     "changed": true,
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]:     "remote_url_changed": false
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: }
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: [WARNING]: Could not match supplied host pattern, ignoring: quicknotes-vm
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: PLAY [Deploy QuickNotes] *******************************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Create the quicknotes system group] **************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Create the quicknotes system user] ***************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Ensure the data directory exists] ****************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Install the QuickNotes binary] *******************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Ship the seed data] ******************************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Render the systemd unit from template] ***********************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: changed: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Reload systemd, enable and start quicknotes] *****************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Install ansible and git] *************************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Make /etc/ansible] *******************************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Ship the local inventory for ansible-pull] *******************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Render the ansible-pull service unit] ************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Render the ansible-pull timer unit] **************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: TASK [Enable and start the ansible-pull timer] *********************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: ok: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: RUNNING HANDLER [restart quicknotes] *******************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: changed: [localhost]
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: PLAY RECAP *********************************************************************
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: localhost                  : ok=14   changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: Starting Ansible Pull at 2026-09-27 02:41:03
+Sep 27 02:41:48 quicknotes-vm ansible-pull[11845]: /usr/bin/ansible-pull -U https://github.com/Salamer2/DevOps-Intro.git -C feature/lab7 -d /var/lib/ansible/local -i /etc/ansible/inventory-local.ini ansible/playbook.yaml
+Sep 27 02:41:48 quicknotes-vm systemd[1]: ansible-pull.service: Deactivated successfully.
+Sep 27 02:41:48 quicknotes-vm systemd[1]: Finished ansible-pull.service - Ansible pull reconciliation for QuickNotes.
+Sep 27 02:41:48 quicknotes-vm systemd[1]: ansible-pull.service: Consumed 36.474s CPU time, 149.0M memory peak, 0B memory swap peak.
+```
+
+```powershell
+thebruh@thebruh-PC:/mnt/c/Users/thebruh/Desktop/DevOpsCourse/DevOps-Intro$ vagrant.exe ssh -c "grep RestartSec /etc/systemd/system/quicknotes.service"
+RestartSec=3s
+```
+
+### Timeline
+
+| Event | Time | Evidence |
+|---|---|---|
+| Commit and push | Sep 27 02:37:54 | `date -u` on host machine |
+| Timer fired and ansible-pull started | Sep 27 02:41:02 | `vagrant.exe ssh -c "sudo journalctl -u ansible-pull.service -f"`  >  `Sep 27 02:41:02 quicknotes-vm systemd[1]: Starting ansible-pull.service - Ansible pull reconciliation for QuickNotes...` |
+| State reconciled | Sep 27 02:41:48 | `vagrant.exe ssh -c "grep RestartSec /etc/systemd/system/quicknotes.service"`  >  `RestartSec=3s` |
+
+VM has successfully reconciled to the new state in less than 5 minutes.
+
+### Design questions
+#### h) ansible-pull is "pull" mode. What's the security benefit vs the "push" model where a control node SSHes in?
+In push model, the cenrtal Ansible node required to hold SSH keys to all machines. If this node gets compromised - that's a catastrope, because hackers immediatly get access to the entire network. Pull model makes the system more decentralized. Machines really only need read-only tokens in most cases and don't carry as much responsibility. Therefore, attackers won't be able to spread easily.
+
+#### i) What's the same pattern called when applied at the Kubernetes layer? Why is ansible-pull a fair simulator at the VM layer?
+The pattern called GitOps. In Kubernetes it is implemented using Flux and ArgoCD. ansible-pull is basically the same in idea. It sits in a system as an agent, periodically checks the Git and converges.
