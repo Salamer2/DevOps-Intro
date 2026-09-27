@@ -17,7 +17,7 @@
     quicknotes_binary_path: /usr/local/bin/quicknotes
     quicknotes_unit_path: /etc/systemd/system/quicknotes.service
     quicknotes_listen_addr: ":8080"
-    quicknotes_restart_sec: 4
+    quicknotes_restart_sec: 3
 
   tasks:
     - name: Create the quicknotes system group
