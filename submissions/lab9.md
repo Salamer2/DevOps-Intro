@@ -184,3 +184,7 @@ CSP affects what thr browser can load on a page. Obviously, if you forbid to loa
 
 #### g) False positives vs accepted findings: ZAP often flags informational issues that aren't real problems. What's the cost of marking them all "accepted" without reading them?
 There are two main reasons. One is that ignoring the informational issues, well, may hide the useful information that issue tries to tell. There may be a real problem there. Ignoring it just accumulates the amount of possible problems in your service. The second reason is that such acceptions may dislead team members, who are actually reading the issues. There will have to guess, was it accepted intentionally or accepted without even reading the issue. That will waste their time, disrupt the teamwork and make the triage principle useless.
+
+## Bonus task
+I found this CVE: https://pkg.go.dev/vuln/GO-2026-5970 and decided to use it.
+It affects golang.org/x/text for all versions below v0.39.0, so i installed v0.38.0

@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"golang.org/x/text/unicode/norm"
 )
 
 func main() {
@@ -82,4 +83,12 @@ func dirname(p string) string {
 		}
 	}
 	return "."
+}
+
+func init() {
+	var it norm.Iter
+	it.InitString(norm.NFC, "test")
+	for !it.Done() {
+		it.Next()
+	}
 }
