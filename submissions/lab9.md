@@ -46,7 +46,7 @@ Tests: 28 (SUCCESSES: 26, FAILURES: 2)
 Failures: 2 (UNKNOWN: 0, LOW: 1, MEDIUM: 1, HIGH: 0, CRITICAL: 0)
 ```
 
-Full outputs are at `submissions/lab9-artifacts/`.
+Full outputs are at [lab9-artifacts/](lab9-artifacts/).
 
 ### Triage
 
@@ -56,7 +56,7 @@ Full outputs are at `submissions/lab9-artifacts/`.
 | AsymmetricPrivateKey in `.vagrant/machines/default/virtualbox/private_key` | HIGH | FALSE POSITIVE | Temporary machine-generated key for Vagrant VM. Never comitted|
 
 ### First 30 lines of SBOM.
-The full file is ```sbom.json```
+The full file is [sbom.json](lab9-artifacts/sbom.json)
 
 ```json
 {
@@ -109,7 +109,7 @@ With SBOM you have a convenient list of components for each image. For example, 
 ### Scan
 
 ZAP baseline 2.16.1 against `http://host.docker.internal:8080`.
-Reports: `submissions/lab9-artifacts/zap-before.html/.json`, `zap-after.html/.json`.
+Reports: [zap-before.html](lab9-artifacts/zap-before.html), [zap-before.json](lab9-artifacts/zap-before.json), [zap-after.html](lab9-artifacts/zap-after.html), [zap-after.json](lab9-artifacts/zap-after.json).
 
 ### Triage
 
@@ -157,13 +157,13 @@ The code change is included in this commit:
 ```
 
 
-### Before [`zap-before.html`]:
+### Before [zap-before.html](lab9-artifacts/zap-before.html):
 
 ```
 Storable and Cacheable Content    Informational    2 instances
 ```
 
-### After [`zap-after.html`]:
+### After [zap-after.html](lab9-artifacts/zap-after.html):
 
 ```
 Non-Storable Content    Informational    2 instances    Evidence: no-store
@@ -183,6 +183,10 @@ CSP affects what thr browser can load on a page. Obviously, if you forbid to loa
 There are two main reasons. One is that ignoring the informational issues, well, may hide the useful information that issue tries to tell. There may be a real problem there. Ignoring it just accumulates the amount of possible problems in your service. The second reason is that such acceptions may dislead team members, who are actually reading the issues. There will have to guess, was it accepted intentionally or accepted without even reading the issue. That will waste their time, disrupt the teamwork and make the triage principle useless.
 
 ## Bonus task
+
+### New CI workflow
+[.github/workflows/ci.yml](../.github/workflows/ci.yml)
+
 I found this CVE: https://pkg.go.dev/vuln/GO-2026-5970 and decided to use it.
 It affects golang.org/x/text for all versions below v0.39.0, so i installed v0.38.0
 That's a bug with norm.Iter that can cause infinite loop. Description from the website:
@@ -230,3 +234,16 @@ go 1.25.0
 
 As it can be seen, govulncheck failed and alerted about exact same vulnerability:
 ![Red govulncheck run](images/govulncheck-error.png)
+
+After revert:
+![green govulncheck revert run](images/govulncheck-revert.png)
+
+### Design questions
+#### h) Reachability is govulncheck's key idea. How is "this module has a CVE but we don't call the affected function" different from "this module has a CVE" — and what does that mean for triage workload?
+Govulncheck reachibiliry idea means that the CVE must actually be dangerous in this current app. This helps to dramatically reduce the amount of work in triage, since there is no need to fix tens of vulnerabilities if it is impossible to even reach them.
+
+#### i) go install golang.org/x/vuln/cmd/govulncheck@<version> — why pin the version of the scanner, not just @latest?
+As in most of the cases, pinning the version is good for reproducibility. This case is the same. One day govulncheck CI can start giving errors, when nothing at all was changed, pinning the version helps to avoid that.
+
+#### j) govulncheck only knows about Go. What's it not going to catch that Trivy (image scan) would?
+Since ```govulncheck``` is made for Go specifically, it won't analyze OS packages, container vulnerabilities. As was already described in task **h**, ```govulncheck``` also would miss vulnerable libraries that are never executed. There can be more examples, but in general - ```govulncheck``` would not find anything not connected with current ```go``` code
