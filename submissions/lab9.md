@@ -53,7 +53,7 @@ Full outputs are at [lab9-artifacts/](lab9-artifacts/).
 | Finding | Severity | Disposition | Reason |
 |---------|----------|-------------|--------|
 | 19 CVEs in ```Go v1.24.13```: CVE-2026-25679, CVE-2026-27145, CVE-2026-32280, CVE-2026-32281, CVE-2026-32283, CVE-2026-33811, CVE-2026-33814, CVE-2026-33818, CVE-2026-39820, CVE-2026-39821, CVE-2026-39822, CVE-2026-39836, CVE-2026-42499, CVE-2026-42504, CVE-2026-56853, CVE-2026-56858, CVE-2026-56859, CVE-2026-56860, CVE-2026-56862 | HIGH | FIX | Changed builder `golang:1.24` to `golang:1.26` in `app/Dockerfile`. After rescan warnings were fixed. |
-| AsymmetricPrivateKey in `.vagrant/machines/default/virtualbox/private_key` | HIGH | FALSE POSITIVE | Temporary machine-generated key for Vagrant VM. Never comitted|
+| AsymmetricPrivateKey in `.vagrant/machines/default/virtualbox/private_key` | HIGH | FALSE POSITIVE | Temporary machine-generated key for Vagrant VM. Never committed|
 
 ### First 30 lines of SBOM.
 The full file is [sbom.json](lab9-artifacts/sbom.json)
@@ -94,13 +94,13 @@ The full file is [sbom.json](lab9-artifacts/sbom.json)
 ### Design questions
 
 #### a) CVE severity is one input, not the answer. What else (reachability, exploit availability, deployment context) matters when triaging?
-Severity score is estimated based on wosrt-case scenario. In reality, it matters if the vulnerable code is reachable at all. In the QuickNotes, for example, almost all HIGH vulnerabilities are not reachable. Exploit availability is a factor too, if the exploit is just possible in theory, it is not as important as a published working exploit. Deployment context also changes the severity. On a local network the risk is much lower than in a public network.
+Severity score is estimated based on worst-case scenario. In reality, it matters if the vulnerable code is reachable at all. In the QuickNotes, for example, almost all HIGH vulnerabilities are not reachable. Exploit availability is a factor too, if the exploit is just possible in theory, it is not as important as a published working exploit. Deployment context also changes the severity. On a local network the risk is much lower than in a public network.
 
 #### b) Distroless images often show zero HIGH/CRITICAL. Why is the minimal base the strongest single security control?
 Distroless contains almost nothing but binary and a few minimal files. There is almost nothing to exploit and patch. Even if the app is hacked, there is literally no shell so the attack is almost impossible to escalate.
 
 #### c) .trivyignore lets you suppress findings. When is that the right move, and when is it security theater?
-It's the right move when you actually analyzed the finding and understood that it is a false alarm or postponed the fix with a documented reason for such decision. It is not fine when you just ignore everything because of lazyness just to deploy as fast as possible.
+It's the right move when you actually analyzed the finding and understood that it is a false alarm or postponed the fix with a documented reason for such decision. It is not fine when you just ignore everything because of laziess just to deploy as fast as possible.
 #### d) The SBOM is a list of components. What concrete future problem does having it today solve? (Hint: Log4Shell, Lecture 9.)
 With SBOM you have a convenient list of components for each image. For example, if in future some vulnerability is being published, it is very simple to check which images are affected and fix them. The same thing was said in the Log4Shell example, where companies with SBOM fixed the exposure within some hours, while for companies without it, it took up to several weeks.
 
@@ -174,13 +174,13 @@ The original finding is gone. The remaining informational alert confirms `Cache-
 ### Design questions
 
 #### e) Why a middleware and not per-handler header sets?
-There are a lot of handlers are it would be requred to write a duplicate code in each one. Moreover, you or another developer can just forget to write another header when you create a new handler, which would expose it to the vulnerability. Middleware wraps the whole router, so everyting inside will pass through the middleware.
+There are a lot of handlers and it would be required to write a duplicate code in each one. Moreover, you or another developer can just forget to write another header when you create a new handler, which would expose it to the vulnerability. Middleware wraps the whole router, so everything inside will pass through the middleware.
 
 #### f) Content-Security-Policy: default-src 'none' is the strictest CSP. What does it break? Why is it OK for QuickNotes (an API) but not for a website?
-CSP affects what thr browser can load on a page. Obviously, if you forbid to load everything, it will also not load the website scrips, styles, and files, which will just remove the website on user end. For quick notes it's fine since it doesnt even have a website, but for exploiter it will shorten the amount of attack vectors.
+CSP affects what the browser can load on a page. Obviously, if you forbid to load everything, it will also not load the website scripts, styles, and files, which will just remove the website on user end. For quick notes it's fine since it doesnt even have a website, but for exploiter it will shorten the amount of attack vectors.
 
 #### g) False positives vs accepted findings: ZAP often flags informational issues that aren't real problems. What's the cost of marking them all "accepted" without reading them?
-There are two main reasons. One is that ignoring the informational issues, well, may hide the useful information that issue tries to tell. There may be a real problem there. Ignoring it just accumulates the amount of possible problems in your service. The second reason is that such acceptions may dislead team members, who are actually reading the issues. There will have to guess, was it accepted intentionally or accepted without even reading the issue. That will waste their time, disrupt the teamwork and make the triage principle useless.
+There are two main reasons. One is that ignoring the informational issues, well, may hide the useful information that issue tries to tell. There may be a real problem there. Ignoring it just accumulates the amount of possible problems in your service. The second reason is that such acceptances may dislead team members, who are actually reading the issues. There will have to guess, was it accepted intentionally or accepted without even reading the issue. That will waste their time, disrupt the teamwork and make the triage principle useless.
 
 ## Bonus task
 
@@ -192,7 +192,7 @@ It affects golang.org/x/text for all versions below v0.39.0, so i installed v0.3
 That's a bug with norm.Iter that can cause infinite loop. Description from the website:
 ```A norm.Iter can enter an infinite loop when handling input containing invalid UTF-8 bytes.```
 
-Here's the govulncheck run before vulnerability introducion:
+Here's the govulncheck run before vulnerability introduction:
 ![Green govulncheck run](images/govulncheck-clear.png)
 
 Then the vulnerability was introduced:
@@ -240,7 +240,7 @@ After revert:
 
 ### Design questions
 #### h) Reachability is govulncheck's key idea. How is "this module has a CVE but we don't call the affected function" different from "this module has a CVE" — and what does that mean for triage workload?
-Govulncheck reachibiliry idea means that the CVE must actually be dangerous in this current app. This helps to dramatically reduce the amount of work in triage, since there is no need to fix tens of vulnerabilities if it is impossible to even reach them.
+Govulncheck reachability idea means that the CVE must actually be dangerous in this current app. This helps to dramatically reduce the amount of work in triage, since there is no need to fix tens of vulnerabilities if it is impossible to even reach them.
 
 #### i) go install golang.org/x/vuln/cmd/govulncheck@<version> — why pin the version of the scanner, not just @latest?
 As in most of the cases, pinning the version is good for reproducibility. This case is the same. One day govulncheck CI can start giving errors, when nothing at all was changed, pinning the version helps to avoid that.
