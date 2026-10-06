@@ -125,7 +125,6 @@ The code change is included in this commit:
 ```diff
 --- a/app/handlers.go
 +++ b/app/handlers.go
-@@ -159,3 +159,11 @@
 +func noStore(next http.Handler) http.Handler {
 +	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 +		w.Header().Set("Cache-Control", "no-store")
@@ -135,7 +134,6 @@ The code change is included in this commit:
 
 --- a/app/main.go
 +++ b/app/main.go
-@@ -28,7 +28,7 @@
  	server := NewServer(store)
  	srv := &http.Server{
  		Addr:              addr,
@@ -146,7 +144,6 @@ The code change is included in this commit:
 
 --- a/app/handlers_test.go
 +++ b/app/handlers_test.go
-@@ -131,3 +131,14 @@
 +func TestNoStoreHeader(t *testing.T) {
 +	srv := newTestServer(t)
 +	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -188,3 +185,48 @@ There are two main reasons. One is that ignoring the informational issues, well,
 ## Bonus task
 I found this CVE: https://pkg.go.dev/vuln/GO-2026-5970 and decided to use it.
 It affects golang.org/x/text for all versions below v0.39.0, so i installed v0.38.0
+That's a bug with norm.Iter that can cause infinite loop. Description from the website:
+```A norm.Iter can enter an infinite loop when handling input containing invalid UTF-8 bytes.```
+
+Here's the govulncheck run before vulnerability introducion:
+![Green govulncheck run](images/govulncheck-clear.png)
+
+Then the vulnerability was introduced:
+```diff
+--- a/app/go.mod
++++ b/app/go.mod
+module quicknotes
+
+go 1.25.0
++
++require golang.org/x/text v0.38.0 // indirect
+
+--- a/app/main.go
++++ b/app/main.go
+ 	"os/signal"
+ 	"syscall"
+ 	"time"
++
++	"golang.org/x/text/unicode/norm"
+ )
+ 
+ func dirname(p string) string {
+ 	for i := len(p) - 1; i >= 0; i-- {
+ 		if p[i] == '/' {
+ 			return p[:i]
+ 		}
+ 	}
+ 	return "."
+ }
++
++func init() {
++	var it norm.Iter
++	it.InitString(norm.NFC, "test")
++	for !it.Done() {
++		it.Next()
++	}
++}
+```
+
+As it can be seen, govulncheck failed and alerted about exact same vulnerability:
+![Red govulncheck run](images/govulncheck-error.png)
