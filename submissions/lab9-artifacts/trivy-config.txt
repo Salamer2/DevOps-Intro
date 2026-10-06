@@ -1,0 +1,29 @@
+
+app/Dockerfile (dockerfile)
+===========================
+Tests: 28 (SUCCESSES: 26, FAILURES: 2)
+Failures: 2 (UNKNOWN: 0, LOW: 1, MEDIUM: 1, HIGH: 0, CRITICAL: 0)
+
+AVD-DS-0013 (MEDIUM): RUN should not be used to change directory: 'mkdir -p /hc &&     printf 'package main\nimport ("net/http"; "os")\nfunc main() {\n  r, err := http.Get("http://localhost:8080/health")\n  if err != nil || r.StatusCode != 200 {\n    os.Exit(1)\n  }\n}\n' > /hc/main.go &&     cd /hc && go mod init hc &&     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/healthcheck .'. Use 'WORKDIR' statement instead.
+════════════════════════════════════════
+Use WORKDIR instead of proliferating instructions like 'RUN cd … && do-something', which are hard to read, troubleshoot, and maintain.
+
+See https://avd.aquasec.com/misconfig/ds013
+────────────────────────────────────────
+ app/Dockerfile:12-15
+────────────────────────────────────────
+  12 ┌ RUN mkdir -p /hc && \
+  13 │     printf 'package main\nimport ("net/http"; "os")\nfunc main() {\n  r, err := http.Get("http://localhost:8080/health")\n  if err != nil || r.StatusCode != 200 {\n    os.Exit(1)\n  }\n}\n' > /hc/main.go && \
+  14 │     cd /hc && go mod init hc && \
+  15 └     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/healthcheck .
+────────────────────────────────────────
+
+
+AVD-DS-0026 (LOW): Add HEALTHCHECK instruction in your Dockerfile
+════════════════════════════════════════
+You should add HEALTHCHECK instruction in your docker container images to perform the health check on running containers.
+
+See https://avd.aquasec.com/misconfig/ds026
+────────────────────────────────────────
+
+
