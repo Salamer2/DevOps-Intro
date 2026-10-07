@@ -1,0 +1,10 @@
+{
+  "name": "quicknotes-host",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [8080],
+  "postCreateCommand": "docker pull ghcr.io/salamer2/devops-intro/quicknotes:v0.1.0",
+  "postStartCommand": "docker rm -f quicknotes 2>/dev/null; docker run -d --name quicknotes -p 8080:8080 ghcr.io/salamer2/devops-intro/quicknotes:v0.1.0"
+}
